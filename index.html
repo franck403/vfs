@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Explorer</title>
+  <style>
+    .explorer {
+      width: 400px;
+      height: 500px;
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+      height: 40px;
+      background-color: #0078D7;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .content {
+      padding: 10px;
+    }
+
+    .file-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .file-list li {
+      display: flex;
+      align-items: center;
+      padding: 5px 0;
+      cursor: pointer;
+    }
+
+    .file-list li:hover {
+      background-color: #F3F3F3;
+    }
+
+    .file-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+
+    .file-name {
+      font-size: 14px;
+    }
+
+    .file-size {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="explorer">
+    <div class="header">
+      <div class="title">File Explorer</div>
+    </div>
+    <div class="content">
+      <ul class="file-list">
+        <!-- File items will be dynamically added here -->
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function VFS() {
+      this.files = {};
+    }
+
+    VFS.prototype.addFile = function (filename, content) {
+      this.files[filename] = content;
+    };
+
+    VFS.prototype.deleteFile = function (filename) {
+      delete this.files[filename];
+    };
+
+    VFS.prototype.readFile = function (filename) {
+      return this.files[filename];
+    };
+
+    var vfs = new VFS();
+    vfs.addFile("file1.txt", "This is the content of file 1.");
+    vfs.addFile("file2.txt", "This is the content of file 2.");
+
+    var fileList = document.querySelector('.file-list');
+
+    for (var filename in vfs.files) {
+      var fileItem = document.createElement('li');
+      var fileIcon = document.createElement('img');
+      fileIcon.src = 'file-icon.png';
+      fileIcon.classList.add('file-icon');
+      var fileName = document.createElement('div');
+      fileName.classList.add('file-name');
+      fileName.textContent = filename;
+      var fileSize = document.createElement('div');
+      fileSize.classList.add('file-size');
+      fileSize.textContent = vfs.files[filename].length + ' bytes';
+
+      fileItem.appendChild(fileIcon);
+      fileItem.appendChild(fileName);
+      fileItem.appendChild(fileSize);
+      fileList.appendChild(fileItem);
+    }
+  </script>
+</body>
+</html>
