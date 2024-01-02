@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>File Explorer</title>
+  <script src="vsf.js"></script>
   <style>
     .explorer {
       width: 400px;
@@ -78,45 +79,46 @@
   </div>
 
   <script>
-    function VFS() {
-      this.files = {};
-    }
-
-    VFS.prototype.addFile = function (filename, content) {
-      this.files[filename] = content;
-    };
-
-    VFS.prototype.deleteFile = function (filename) {
-      delete this.files[filename];
-    };
-
-    VFS.prototype.readFile = function (filename) {
-      return this.files[filename];
-    };
-
     var vfs = new VFS();
     vfs.addFile("file1.txt", "This is the content of file 1.");
     vfs.addFile("file2.txt", "This is the content of file 2.");
+var fileList = document.querySelector('.file-list');
 
-    var fileList = document.querySelector('.file-list');
+for (var filename in vfs.files) {
+  var fileItem = document.createElement('li');
+  var fileIcon = document.createElement('img');
+  fileIcon.src = 'file-icon.png';
+  fileIcon.classList.add('file-icon');
+  var fileName = document.createElement('div');
+  fileName.classList.add('file-name');
+  fileName.textContent = filename;
+  var fileSize = document.createElement('div');
+  fileSize.classList.add('file-size');
+  fileSize.textContent = vfs.files[filename].length + ' bytes';
 
-    for (var filename in vfs.files) {
-      var fileItem = document.createElement('li');
-      var fileIcon = document.createElement('img');
-      fileIcon.src = 'file-icon.png';
-      fileIcon.classList.add('file-icon');
-      var fileName = document.createElement('div');
-      fileName.classList.add('file-name');
-      fileName.textContent = filename;
-      var fileSize = document.createElement('div');
-      fileSize.classList.add('file-size');
-      fileSize.textContent = vfs.files[filename].length + ' bytes';
+  fileItem.appendChild(fileIcon);
+  fileItem.appendChild(fileName);
+  fileItem.appendChild(fileSize);
+  fileList.appendChild(fileItem);
 
-      fileItem.appendChild(fileIcon);
-      fileItem.appendChild(fileName);
-      fileItem.appendChild(fileSize);
-      fileList.appendChild(fileItem);
-    }
+  // Add event listener to open file in text editor when clicked
+  fileItem.addEventListener('click', function(event) {
+    var selectedFile = event.currentTarget.querySelector('.file-name').textContent;
+    var fileContent = vfs.readFile(selectedFile);
+    openTextEditor(selectedFile, fileContent);
+  });
+}
+
+function openTextEditor(filename, content) {
+  // Create a new window or tab for the text editor
+  var textEditorWindow = window.open('', '_blank');
+  
+  // Set the content of the text editor to the file content
+  textEditorWindow.document.write('<html><head><title>' + filename + '</title></head><body><pre>' + content + '</pre></body></html>');
+  
+  // Prevent the text editor from inheriting the styles of the parent window
+  textEditorWindow.document.close();
+}
   </script>
 </body>
 </html>
