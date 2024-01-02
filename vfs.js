@@ -15,7 +15,7 @@ VFS.prototype.readFile = function (filename) {
 };
 // Register the Service Worker
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.vfs.js')
+  navigator.serviceWorker.register('https://cdn.jsdelivr.net/gh/franck403/vfs@master/sw.vfs.js')
     .then(function (registration) {
       console.log('Service Worker registered with scope:', registration.scope);
     })
