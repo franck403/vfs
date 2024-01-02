@@ -1,16 +1,27 @@
-self.addEventListener('fetch', function (event) {
-  var url = new URL(event.request.url);
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("file-cache").then((cache) => {
+      return cache.addAll(Object.keys(vfs.files));
+    })
+  );
+});
 
-  // Intercept requests to the proxy path
-  if (url.pathname.startsWith('/vfs')) {
-    var filename = url.pathname.substring(4); // Remove '/vfs' from the path
-    var vfs = new VFS();
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
 
-    // Check if the file exists in the VFS
-    if (vfs.files.hasOwnProperty(filename)) {
-      var content = vfs.readFile(filename);
-      var response = new Response(content);
-      event.respondWith(response);
-    }
-  }
+      return fetch(event.request).then((networkResponse) => {
+        if (networkResponse.ok) {
+          caches.open("file-cache").then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+          });
+        }
+
+        return networkResponse;
+      });
+    })
+  );
 });
