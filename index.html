@@ -39,26 +39,46 @@
     <textarea id="file-editor" disabled></textarea>
     <button id="save-button" disabled>Save</button>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/browserfs/dist/browserfs.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-BrowserFS.configure({
-  fs: "IndexedDB",
-  options: {
-    storeName: "MyFilesystem"
-  }
-}, function (err) {
-  if (err) {
-    console.log(err);
-  } else {
-    fs = BrowserFS.BFSRequire('fs');
-    refreshFileList();
-    createDirectoryButton.addEventListener('click', handleCreateDirectory);
-    createFileButton.addEventListener('click', handleCreateFile);
-    fileList.addEventListener('change', handleFileSelect);
-    saveButton.addEventListener('click', handleSaveButtonClick);
-  }
-});
+      var directoryInput = document.getElementById('directory-input');
+      var createDirectoryButton = document.getElementById('create-directory-button');
+      var fileInput = document.getElementById('file-input');
+      var createFileButton = document.getElementById('create-file-button');
+      var fileList = document.getElementById('file-list');
+      var fileContent = document.getElementById('file-content');
+      var fileEditor = document.getElementById('file-editor');
+      var saveButton = document.getElementById('save-button');
+      var fs = null;
+      var currentFilePath = null;
+
+      BrowserFS.configure({
+        fs: "IndexedDB",
+        options: {
+          storeName: "MyFilesystem"
+        }
+      }, function (err) {
+        if (err) {
+          console.log(err);
+        } else {
+          fs = BrowserFS.BFSRequire('fs');
+          initializeRootDirectory();
+          refreshFileList();
+          createDirectoryButton.addEventListener('click', handleCreateDirectory);
+          createFileButton.addEventListener('click', handleCreateFile);
+          fileList.addEventListener('change', handleFileSelect);
+          saveButton.addEventListener('click', handleSaveButtonClick);
+        }
+      });
+
+      function initializeRootDirectory() {
+        if (!fs.existsSync('/')) {
+          fs.mkdirSync('/');
+        }
+      }
+
       function refreshFileList() {
         fs.readdir('/', function(err, files) {
           if (err) {
