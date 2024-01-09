@@ -1,124 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>File Explorer</title>
-  <script src="vfs.js"></script>
   <style>
-    .explorer {
-      width: 400px;
-      height: 500px;
-      background-color: #fff;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    body {
+      font-family: Arial, sans-serif;
     }
-
-    .header {
-      height: 40px;
-      background-color: #0078D7;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
+    pre {
+      white-space: pre-wrap;
     }
-
-    .title {
-      font-size: 16px;
-      font-weight: bold;
+    textarea {
+      width: 100%;
+      height: 300px;
     }
-
-    .content {
-      padding: 10px;
-    }
-
-    .file-list {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .file-list li {
-      display: flex;
-      align-items: center;
-      padding: 5px 0;
-      cursor: pointer;
-    }
-
-    .file-list li:hover {
-      background-color: #F3F3F3;
-    }
-
-    .file-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
-    }
-
-    .file-name {
-      font-size: 14px;
-    }
-
-    .file-size {
-      font-size: 12px;
-      color: #666;
+    button {
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="explorer">
-    <div class="header">
-      <div class="title">File Explorer</div>
-    </div>
-    <div class="content">
-      <ul class="file-list">
-        <!-- File items will be dynamically added here -->
-      </ul>
-    </div>
+  <h1>File Explorer</h1>
+  <div>
+    <label for="directory-input">Create a new directory:</label>
+    <input type="text" id="directory-input">
+    <button id="create-directory-button">Create Directory</button>
+  </div>
+  <div>
+    <label for="file-input">Create a new file:</label>
+    <input type="text" id="file-input">
+    <button id="create-file-button">Create File</button>
+  </div>
+  <div>
+    <label for="file-list">Select a file:</label>
+    <select id="file-list"></select>
+  </div>
+  <div>
+    <pre id="file-content"></pre>
+    <textarea id="file-editor" disabled></textarea>
+    <button id="save-button" disabled>Save</button>
   </div>
 
+  <script src="https://unpkg.com/browserfs"></script>
   <script>
-    var vfs = new VFS();
-    vfs.addFile("file1.txt", "This is the content of file 1.");
-    vfs.addFile("file2.txt", "This is the content of file 2.");
-var fileList = document.querySelector('.file-list');
+    document.addEventListener('DOMContentLoaded', function() {
+      var directoryInput = document.getElementById('directory-input');
+      var createDirectoryButton = document.getElementById('create-directory-button');
+      var fileInput = document.getElementById('file-input');
+      var createFileButton = document.getElementById('create-file-button');
+      var fileList = document.getElementById('file-list');
+      var fileContent = document.getElementById('file-content');
+      var fileEditor = document.getElementById('file-editor');
+      var saveButton = document.getElementById('save-button');
+      var fs = null;
+      var currentFilePath = null;
 
-for (var filename in vfs.files) {
-  var fileItem = document.createElement('li');
-  var fileIcon = document.createElement('img');
-  fileIcon.src = 'file-icon.png';
-  fileIcon.classList.add('file-icon');
-  var fileName = document.createElement('div');
-  fileName.classList.add('file-name');
-  fileName.textContent = filename;
-  var fileSize = document.createElement('div');
-  fileSize.classList.add('file-size');
-  fileSize.textContent = vfs.files[filename].length + ' bytes';
+      BrowserFS.configure({
+        fs: "IndexedDB",
+      }, function (err) {
+        if (err) {
+          console.log(err);
+        } else {
+          fs = BrowserFS.BFSRequire('fs');
+          refreshFileList();
+          createDirectoryButton.addEventListener('click', handleCreateDirectory);
+          createFileButton.addEventListener('click', handleCreateFile);
+          fileList.addEventListener('change', handleFileSelect);
+          saveButton.addEventListener('click', handleSaveButtonClick);
+        }
+      });
 
-  fileItem.appendChild(fileIcon);
-  fileItem.appendChild(fileName);
-  fileItem.appendChild(fileSize);
-  fileList.appendChild(fileItem);
+      function refreshFileList() {
+        fs.readdir('/', function(err, files) {
+          if (err) {
+            console.log(err);
+          } else {
+            fileList.innerHTML = '';
 
-  // Add event listener to open file in text editor when clicked
-  fileItem.addEventListener('click', function(event) {
-    var selectedFile = event.currentTarget.querySelector('.file-name').textContent;
-    var fileContent = vfs.readFile(selectedFile);
-    openTextEditor(selectedFile, fileContent);
-  });
-}
+            files.forEach(function(file) {
+              var option = document.createElement('option');
+              option.textContent = file;
+              fileList.appendChild(option);
+            });
+          }
+        });
+      }
 
-function openTextEditor(filename, content) {
-  // Create a new window or tab for the text editor
-  var textEditorWindow = window.open('', '_blank');
-  
-  // Set the content of the text editor to the file content
-  textEditorWindow.document.write('<html><head><title>' + filename + '</title></head><body><pre>' + content + '</pre></body></html>');
-  
-  // Prevent the text editor from inheriting the styles of the parent window
-  textEditorWindow.document.close();
-}
+      function handleCreateDirectory() {
+        var directoryName = directoryInput.value;
+
+        fs.mkdir(directoryName, function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('Directory created!');
+            refreshFileList();
+          }
+        });
+      }
+
+      function handleCreateFile() {
+        var fileName = fileInput.value;
+
+        fs.writeFile(fileName, '', function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('File created!');
+            refreshFileList();
+          }
+        });
+      }
+
+      function handleFileSelect() {
+        var fileName = fileList.value;
+        currentFilePath = fileName;
+
+        fs.readFile(fileName, 'utf8', function(err, data) {
+          if (err) {
+            console.log(err);
+          } else {
+            fileContent.textContent = data;
+            fileEditor.value = data;
+            fileEditor.removeAttribute('disabled');
+            saveButton.removeAttribute('disabled');
+          }
+        });
+      }
+
+      function handleSaveButtonClick() {
+        var content = fileEditor.value;
+
+        fs.writeFile(currentFilePath, content, 'utf8', function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('File saved!');
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>
