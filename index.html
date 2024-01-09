@@ -55,38 +55,32 @@
       var currentFilePath = null;
 
       BrowserFS.configure({
-        fs: "IndexedDB",
-        options: {}
+        fs: "MountableFileSystem",
+        options: {
+          '/tmp': { fs: "InMemory" },
+          '/home': { fs: "IndexedDB" },
+          '/mnt/usb0': { fs: "LocalStorage" }
+        }
       }, function (err) {
         if (err) {
           console.log(err);
         } else {
           fs = BrowserFS.BFSRequire('fs');
-          fs.mkdirSync('/', { recursive: true });
-          fs.mountSync('/', { fs: 'IndexedDB' });
-          fs.chdirSync('/');
-          initializeRootDirectory();
-          refreshFileList();
-          createDirectoryButton.addEventListener('click', handleCreateDirectory);
-          createFileButton.addEventListener('click', handleCreateFile);
-          fileList.addEventListener('change', handleFileSelect);
-          saveButton.addEventListener('click', handleSaveButtonClick);
+          fs.readdir('/', function(err, contents) {
+            if (err) {
+              console.log(err);
+            } else {
+              refreshFileList(contents);
+              createDirectoryButton.addEventListener('click', handleCreateDirectory);
+              createFileButton.addEventListener('click', handleCreateFile);
+              fileList.addEventListener('change', handleFileSelect);
+              saveButton.addEventListener('click', handleSaveButtonClick);
+            }
+          });
         }
       });
 
-      function initializeRootDirectory() {
-        try {
-          fs.mkdirSync('/');
-        } catch (err) {
-          if (err.code !== 'EEXIST') {
-            console.log(err);
-          }
-        }
-      }
-
-      function refreshFileList() {
-        var files = fs.readdirSync('/');
-
+      function refreshFileList(files) {
         fileList.innerHTML = '';
         files.forEach(function(file) {
           var option = document.createElement('option');
@@ -98,53 +92,65 @@
       function handleCreateDirectory() {
         var directoryName = directoryInput.value;
 
-        try {
-          fs.mkdirSync(directoryName);
-          console.log('Directory created!');
-          refreshFileList();
-        } catch (err) {
-          console.log(err);
-        }
+        fs.mkdir(directoryName, function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('Directory created!');
+            fs.readdir('/', function(err, contents) {
+              if (err) {
+                console.log(err);
+              } else {
+                refreshFileList(contents);
+              }
+            });
+          }
+        });
       }
 
       function handleCreateFile() {
         var fileName = fileInput.value;
 
-        try {
-          fs.writeFileSync(fileName, '');
-          console.log('File created!');
-          refreshFileList();
-        } catch (err) {
-          console.log(err);
-        }
+        fs.writeFile(fileName, '', function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('File created!');
+            fs.readdir('/', function(err, contents) {
+              if (err) {
+                console.log(err);
+              } else {
+                refreshFileList(contents);
+              }
+            });
+          }
+        });
       }
 
       function handleFileSelect() {
         var fileName = fileList.value;
         currentFilePath = fileName;
 
-        try {
-          var data = fs.readFileSync(fileName, 'utf8');
-          fileContent.textContent = data;
-          fileEditor.value = data;
-          fileEditor.removeAttribute('disabled');
-          saveButton.removeAttribute('disabled');
-        } catch (err) {
-          console.log(err);
-        }
+        fs.readFile(fileName, 'utf8', function(err, data) {
+          if (err) {
+            console.log(err);
+          } else {
+            fileContent.textContent = data;
+            fileEditor.value = data;
+            fileEditor.removeAttribute('disabled');
+            saveButton.removeAttribute('disabled');
+          }
+        });
       }
 
       function handleSaveButtonClick() {
         var content = fileEditor.value;
 
-        try {
-          fs.writeFileSync(currentFilePath, content, 'utf8');
-          console.log('File saved!');
-        } catch (err) {
-          console.log(err);
-        }
+        fs.writeFile(currentFilePath, content, 'utf8', function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('File saved!');
+          }
+        });
       }
-    });
-  </script>
-</body>
-</html>
