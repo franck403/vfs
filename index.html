@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>File Manager</title>
-  <script src="https://cdn.jsdelivr.net/npm/browserfs/dist/browserfs.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -83,120 +82,6 @@
     </div>
   </div>
   
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      var directoryInput = document.getElementById('directory-input');
-      var createDirectoryButton = document.getElementById('create-directory-button');
-      var fileInput = document.getElementById('file-input');
-      var createFileButton = document.getElementById('create-file-button');
-      var fileList = document.getElementById('file-list');
-      var fileContent = document.getElementById('file-content');
-      var fileEditor = document.getElementById('file-editor');
-      var saveButton = document.getElementById('save-button');
-      var fs = null;
-      var currentFilePath = null;
-
-      BrowserFS.configure({
-        fs: "MountableFileSystem",
-        options: {
-          '/tmp': { fs: "InMemory" },
-          '/home': { fs: "IndexedDB" },
-          '/mnt/usb0': { fs: "LocalStorage" }
-        }
-      }, function (err) {
-        if (err) {
-          console.error(err); // Log the configuration error
-        } else {
-          fs = BrowserFS.BFSRequire('fs');
-          fs.readdir('/', function (err, contents) {
-            if (err) {
-              console.error(err); // Log the readdir error
-            } else {
-              refreshFileList(contents);
-              createDirectoryButton.addEventListener('click', handleCreateDirectory);
-              createFileButton.addEventListener('click', handleCreateFile);
-              fileList.addEventListener('change', handleFileSelect);
-              saveButton.addEventListener('click', handleSaveButtonClick);
-            }
-          });
-        }
-      });
-
-      function refreshFileList(files) {
-        fileList.innerHTML = '';
-        files.forEach(function (file) {
-          var option = document.createElement('option');
-          option.textContent = file;
-          fileList.appendChild(option);
-        });
-      }
-
-      function handleCreateDirectory() {
-        var directoryName = directoryInput.value;
-
-        fs.mkdir(directoryName, function (err) {
-          if (err) {
-            console.error(err); // Log the mkdir error
-          } else {
-            console.log('Directory created!');
-            fs.readdir('/', function (err, contents) {
-              if (err) {
-                console.error(err); // Log the readdir error
-              } else {
-                refreshFileList(contents);
-              }
-            });
-          }
-        });
-      }
-
-      function handleCreateFile() {
-        var fileName = fileInput.value;
-
-        fs.writeFile(fileName, '', function (err) {
-          if (err) {
-            console.error(err); // Log the writeFile error
-          } else {
-            console.log('File created!');
-            fs.readdir('/', function (err, contents) {
-              if (err) {
-               console.error(err); // Log the readdir error
-              } else {
-                refreshFileList(contents);
-              }
-            });
-          }
-        });
-      }
-
-      function handleFileSelect() {
-        var fileName = fileList.value;
-        currentFilePath = fileName;
-
-        fs.readFile(fileName, 'utf8', function (err, data) {
-          if (err) {
-            console.error(err); // Log the readFile error
-          } else {
-            fileContent.textContent = data;
-            fileEditor.value = data;
-            fileEditor.removeAttribute('disabled');
-            saveButton.removeAttribute('disabled');
-          }
-        });
-      }
-
-      function handleSaveButtonClick() {
-        var content = fileEditor.value;
-
-        fs.writeFile(currentFilePath, content, 'utf8', function (err) {
-          if (err) {
-            console.error(err); // Log the writeFile error
-          } else {
-            console.log('File saved!');
-          }
-        });
-      }
-    });
-  </script>
+  <script src='vfs.js' type='module'>  </script>
 </body>
 </html>
