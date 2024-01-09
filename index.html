@@ -1,156 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>File Explorer</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    pre {
-      white-space: pre-wrap;
-    }
-    textarea {
-      width: 100%;
-      height: 300px;
-    }
-    button {
-      margin-top: 10px;
-    }
-  </style>
+  <title>File Manager</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-  <h1>File Explorer</h1>
-  <div>
-    <label for="directory-input">Create a new directory:</label>
-    <input type="text" id="directory-input">
-    <button id="create-directory-button">Create Directory</button>
+  <h1>File Manager</h1>
+  
+  <div class="container">
+    <div class="input-section">
+      <label for="directory-input">Directory Name:</label>
+      <input type="text" id="directory-input">
+      <button id="create-directory-button">Create Directory</button>
+    </div>
+    
+    <div class="input-section">
+      <label for="file-input">File Name:</label>
+      <input type="text" id="file-input">
+      <button id="create-file-button">Create File</button>
+    </div>
+    
+    <div class="file-section">
+      <label for="file-list">Select a File:</label>
+      <select id="file-list"></select>
+    </div>
+    
+    <div class="file-section">
+      <h3>File Content:</h3>
+      <pre id="file-content"></pre>
+    </div>
+    
+    <div class="file-section">
+      <h3>File Editor:</h3>
+      <textarea id="file-editor" disabled></textarea>
+      <button id="save-button" disabled>Save</button>
+    </div>
   </div>
-  <div>
-    <label for="file-input">Create a new file:</label>
-    <input type="text" id="file-input">
-    <button id="create-file-button">Create File</button>
-  </div>
-  <div>
-    <label for="file-list">Select a file:</label>
-    <select id="file-list"></select>
-  </div>
-  <div>
-    <pre id="file-content"></pre>
-    <textarea id="file-editor" disabled></textarea>
-    <button id="save-button" disabled>Save</button>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/browserfs/dist/browserfs.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var directoryInput = document.getElementById('directory-input');
-      var createDirectoryButton = document.getElementById('create-directory-button');
-      var fileInput = document.getElementById('file-input');
-      var createFileButton = document.getElementById('create-file-button');
-      var fileList = document.getElementById('file-list');
-      var fileContent = document.getElementById('file-content');
-      var fileEditor = document.getElementById('file-editor');
-      var saveButton = document.getElementById('save-button');
-      var fs = null;
-      var currentFilePath = null;
-
-      BrowserFS.configure({
-        fs: "MountableFileSystem",
-        options: {
-          '/tmp': { fs: "InMemory" },
-          '/home': { fs: "IndexedDB" },
-          '/mnt/usb0': { fs: "LocalStorage" }
-        }
-      }, function (err) {
-        if (err) {
-          console.log(err);
-        } else {
-          fs = BrowserFS.BFSRequire('fs');
-          fs.readdir('/', function(err, contents) {
-            if (err) {
-              console.log(err);
-            } else {
-              refreshFileList(contents);
-              createDirectoryButton.addEventListener('click', handleCreateDirectory);
-              createFileButton.addEventListener('click', handleCreateFile);
-              fileList.addEventListener('change', handleFileSelect);
-              saveButton.addEventListener('click', handleSaveButtonClick);
-            }
-          });
-        }
-      });
-
-      function refreshFileList(files) {
-        fileList.innerHTML = '';
-        files.forEach(function(file) {
-          var option = document.createElement('option');
-          option.textContent = file;
-          fileList.appendChild(option);
-        });
-      }
-
-      function handleCreateDirectory() {
-        var directoryName = directoryInput.value;
-
-        fs.mkdir(directoryName, function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('Directory created!');
-            fs.readdir('/', function(err, contents) {
-              if (err) {
-                console.log(err);
-              } else {
-                refreshFileList(contents);
-              }
-            });
-          }
-        });
-      }
-
-      function handleCreateFile() {
-        var fileName = fileInput.value;
-
-        fs.writeFile(fileName, '', function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('File created!');
-            fs.readdir('/', function(err, contents) {
-              if (err) {
-                console.log(err);
-              } else {
-                refreshFileList(contents);
-              }
-            });
-          }
-        });
-      }
-
-      function handleFileSelect() {
-        var fileName = fileList.value;
-        currentFilePath = fileName;
-
-        fs.readFile(fileName, 'utf8', function(err, data) {
-          if (err) {
-            console.log(err);
-          } else {
-            fileContent.textContent = data;
-            fileEditor.value = data;
-            fileEditor.removeAttribute('disabled');
-            saveButton.removeAttribute('disabled');
-          }
-        });
-      }
-
-      function handleSaveButtonClick() {
-        var content = fileEditor.value;
-
-        fs.writeFile(currentFilePath, content, 'utf8', function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('File saved!');
-          }
-        });
-      }
+  
+  <script src="script.js"></script>
+</body>
+</html>
