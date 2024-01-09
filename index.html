@@ -56,20 +56,31 @@
 
       BrowserFS.configure({
         fs: "IndexedDB",
-        options: {
-          storeName: "MyFilesystem"
-        }
+        options: {}
       }, function (err) {
         if (err) {
           console.log(err);
         } else {
           fs = BrowserFS.BFSRequire('fs');
-          initializeRootDirectory();
-          refreshFileList();
-          createDirectoryButton.addEventListener('click', handleCreateDirectory);
-          createFileButton.addEventListener('click', handleCreateFile);
-          fileList.addEventListener('change', handleFileSelect);
-          saveButton.addEventListener('click', handleSaveButtonClick);
+          fs.mkdir('/', function (err) {
+            if (err) {
+              console.log(err);
+            } else {
+              fs.mount('/', { fs: 'IndexedDB' }, function (err) {
+                if (err) {
+                  console.log(err);
+                } else {
+                  fs.chdir('/');
+                  initializeRootDirectory();
+                  refreshFileList();
+                  createDirectoryButton.addEventListener('click', handleCreateDirectory);
+                  createFileButton.addEventListener('click', handleCreateFile);
+                  fileList.addEventListener('change', handleFileSelect);
+                  saveButton.addEventListener('click', handleSaveButtonClick);
+                }
+              });
+            }
+          });
         }
       });
 
