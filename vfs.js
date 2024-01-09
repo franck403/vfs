@@ -1,4 +1,4 @@
-import { configure, BFSRequire } from 'https://cdn.jsdelivr.net/npm/browserfs/dist/browserfs.min.js';
+import { configure, BFSRequire } from 'https://cdn.jsdelivr.net/npm/browserfs/dist/browserfs.js';
 
 // you can also add a callback as the last parameter instead of using promises
 await configure({ fs: 'LocalStorage' });
