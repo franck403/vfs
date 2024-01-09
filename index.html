@@ -62,102 +62,87 @@
           console.log(err);
         } else {
           fs = BrowserFS.BFSRequire('fs');
-          fs.mkdir('/', function (err) {
-            if (err) {
-              console.log(err);
-            } else {
-              fs.mount('/', { fs: 'IndexedDB' }, function (err) {
-                if (err) {
-                  console.log(err);
-                } else {
-                  fs.chdir('/');
-                  initializeRootDirectory();
-                  refreshFileList();
-                  createDirectoryButton.addEventListener('click', handleCreateDirectory);
-                  createFileButton.addEventListener('click', handleCreateFile);
-                  fileList.addEventListener('change', handleFileSelect);
-                  saveButton.addEventListener('click', handleSaveButtonClick);
-                }
-              });
-            }
-          });
+          fs.mkdirSync('/', { recursive: true });
+          fs.mountSync('/', { fs: 'IndexedDB' });
+          fs.chdirSync('/');
+          initializeRootDirectory();
+          refreshFileList();
+          createDirectoryButton.addEventListener('click', handleCreateDirectory);
+          createFileButton.addEventListener('click', handleCreateFile);
+          fileList.addEventListener('change', handleFileSelect);
+          saveButton.addEventListener('click', handleSaveButtonClick);
         }
       });
 
       function initializeRootDirectory() {
-        if (!fs.existsSync('/')) {
+        try {
           fs.mkdirSync('/');
+        } catch (err) {
+          if (err.code !== 'EEXIST') {
+            console.log(err);
+          }
         }
       }
 
       function refreshFileList() {
-        fs.readdir('/', function(err, files) {
-          if (err) {
-            console.log(err);
-          } else {
-            fileList.innerHTML = '';
+        var files = fs.readdirSync('/');
 
-            files.forEach(function(file) {
-              var option = document.createElement('option');
-              option.textContent = file;
-              fileList.appendChild(option);
-            });
-          }
+        fileList.innerHTML = '';
+        files.forEach(function(file) {
+          var option = document.createElement('option');
+          option.textContent = file;
+          fileList.appendChild(option);
         });
       }
 
       function handleCreateDirectory() {
         var directoryName = directoryInput.value;
 
-        fs.mkdir(directoryName, function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('Directory created!');
-            refreshFileList();
-          }
-        });
+        try {
+          fs.mkdirSync(directoryName);
+          console.log('Directory created!');
+          refreshFileList();
+        } catch (err) {
+          console.log(err);
+        }
       }
 
       function handleCreateFile() {
         var fileName = fileInput.value;
 
-        fs.writeFile(fileName, '', function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('File created!');
-            refreshFileList();
-          }
-        });
+        try {
+          fs.writeFileSync(fileName, '');
+          console.log('File created!');
+          refreshFileList();
+        } catch (err) {
+          console.log(err);
+        }
       }
 
       function handleFileSelect() {
         var fileName = fileList.value;
         currentFilePath = fileName;
 
-        fs.readFile(fileName, 'utf8', function(err, data) {
-          if (err) {
-            console.log(err);
-          } else {
-            fileContent.textContent = data;
-            fileEditor.value = data;
-            fileEditor.removeAttribute('disabled');
-            saveButton.removeAttribute('disabled');
-          }
-        });
+        try {
+          var data = fs.readFileSync(fileName, 'utf8');
+          fileContent.textContent = data;
+          fileEditor.value = data;
+          fileEditor.removeAttribute('disabled');
+          saveButton.removeAttribute('disabled');
+        } catch (err) {
+          console.log(err);
+        }
       }
 
       function handleSaveButtonClick() {
         var content = fileEditor.value;
 
-        fs.writeFile(currentFilePath, content, 'utf8', function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('File saved!');
-          }
-        });
+        try {
+          fs.writeFileSync(currentFilePath, content, 'utf8');
+          console.log('File saved!');
+        } catch (err) {
+          console.log(err);
+        }
       }
     });
   </script>
